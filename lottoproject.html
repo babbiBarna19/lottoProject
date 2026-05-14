@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CanuckPicks — Canadian Lottery AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+–red: #D0021B;
+–red-light: #fff0f2;
+–bg: #f7f7f5;
+–white: #ffffff;
+–text: #1a1a1a;
+–muted: #888;
+–border: #e5e5e3;
+–radius: 10px;
+–font: ‘Outfit’, sans-serif;
+}
+
+body {
+font-family: var(–font);
+background: var(–bg);
+color: var(–text);
+min-height: 100vh;
+padding: 0 0 60px;
+}
+
+/* HEADER */
+header {
+background: var(–white);
+border-bottom: 1px solid var(–border);
+padding: 18px 24px;
+display: flex;
+align-items: center;
+gap: 10px;
+}
+
+.logo {
+font-size: 1.25rem;
+font-weight: 600;
+letter-spacing: -0.02em;
+}
+
+.logo span { color: var(–red); }
+
+.logo-sub {
+font-size: 0.75rem;
+color: var(–muted);
+font-weight: 400;
+margin-left: auto;
+}
+
+/* LAYOUT */
+.container {
+max-width: 680px;
+margin: 0 auto;
+padding: 32px 16px 0;
+}
+
+/* SECTION */
+.section {
+background: var(–white);
+border: 1px solid var(–border);
+border-radius: var(–radius);
+margin-bottom: 16px;
+overflow: hidden;
+}
+
+.section-header {
+padding: 14px 20px;
+border-bottom: 1px solid var(–border);
+font-size: 0.75rem;
+font-weight: 500;
+text-transform: uppercase;
+letter-spacing: 0.07em;
+color: var(–muted);
+}
+
+.section-body { padding: 20px; }
+
+/* GAME TABS */
+.tabs {
+display: flex;
+gap: 8px;
+margin-bottom: 20px;
+flex-wrap: wrap;
+}
+
+.tab {
+padding: 8px 16px;
+border-radius: 6px;
+border: 1px solid var(–border);
+background: var(–white);
+font-family: var(–font);
+font-size: 0.85rem;
+font-weight: 500;
+cursor: pointer;
+color: var(–muted);
+transition: all 0.15s;
+}
+
+.tab:hover { border-color: var(–red); color: var(–red); }
+
+.tab.active {
+background: var(–red);
+border-color: var(–red);
+color: white;
+}
+
+/* GAME META */
+.game-meta {
+font-size: 0.8rem;
+color: var(–muted);
+margin-bottom: 16px;
+padding-bottom: 16px;
+border-bottom: 1px solid var(–border);
+}
+
+/* API KEY */
+.field { margin-bottom: 16px; }
+
+.field label {
+display: block;
+font-size: 0.78rem;
+font-weight: 500;
+color: var(–muted);
+margin-bottom: 6px;
+}
+
+.field input {
+width: 100%;
+padding: 10px 14px;
+border: 1px solid var(–border);
+border-radius: 7px;
+font-family: var(–font);
+font-size: 0.9rem;
+color: var(–text);
+background: var(–bg);
+outline: none;
+transition: border-color 0.15s;
+}
+
+.field input:focus { border-color: var(–red); background: white; }
+.field input::placeholder { color: #ccc; }
+
+.field-hint {
+font-size: 0.72rem;
+color: var(–muted);
+margin-top: 5px;
+}
+
+.field-hint a { color: var(–red); text-decoration: none; }
+
+/* PICKS ROW */
+.row {
+display: flex;
+align-items: center;
+justify-content: space-between;
+margin-bottom: 16px;
+}
+
+.row-label { font-size: 0.85rem; font-weight: 500; }
+
+.stepper {
+display: flex;
+align-items: center;
+gap: 0;
+border: 1px solid var(–border);
+border-radius: 7px;
+overflow: hidden;
+}
+
+.stepper button {
+background: var(–bg);
+border: none;
+width: 34px;
+height: 34px;
+font-size: 1rem;
+cursor: pointer;
+color: var(–text);
+font-family: var(–font);
+transition: background 0.1s;
+}
+
+.stepper button:hover { background: var(–border); }
+
+.stepper span {
+padding: 0 14px;
+font-size: 0.95rem;
+font-weight: 600;
+min-width: 36px;
+text-align: center;
+background: white;
+height: 34px;
+display: flex;
+align-items: center;
+justify-content: center;
+}
+
+/* BUTTON */
+.btn {
+width: 100%;
+padding: 13px;
+background: var(–red);
+color: white;
+border: none;
+border-radius: 7px;
+font-family: var(–font);
+font-size: 1rem;
+font-weight: 600;
+cursor: pointer;
+transition: opacity 0.15s, transform 0.1s;
+letter-spacing: 0.01em;
+}
+
+.btn:hover { opacity: 0.88; }
+.btn:active { transform: scale(0.99); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ERROR */
+.error {
+margin-top: 12px;
+padding: 10px 14px;
+background: var(–red-light);
+border: 1px solid #ffc7cb;
+border-radius: 7px;
+font-size: 0.82rem;
+color: var(–red);
+}
+
+/* LOADING */
+.loading {
+display: flex;
+align-items: center;
+gap: 10px;
+padding: 24px 0;
+justify-content: center;
+font-size: 0.85rem;
+color: var(–muted);
+}
+
+.spinner {
+width: 18px;
+height: 18px;
+border: 2px solid var(–border);
+border-top-color: var(–red);
+border-radius: 50%;
+animation: spin 0.7s linear infinite;
+flex-shrink: 0;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* PICKS */
+.pick-card {
+border: 1px solid var(–border);
+border-radius: 8px;
+padding: 14px 16px;
+margin-bottom: 10px;
+animation: fadeUp 0.25s ease forwards;
+opacity: 0;
+}
+
+@keyframes fadeUp {
+from { opacity: 0; transform: translateY(6px); }
+to { opacity: 1; transform: translateY(0); }
+}
+
+.pick-top {
+display: flex;
+align-items: center;
+justify-content: space-between;
+margin-bottom: 10px;
+}
+
+.pick-num { font-size: 0.72rem; color: var(–muted); font-weight: 500; }
+
+.strategy-tag {
+font-size: 0.68rem;
+padding: 2px 8px;
+border-radius: 4px;
+background: var(–red-light);
+color: var(–red);
+font-weight: 500;
+letter-spacing: 0.03em;
+}
+
+.balls {
+display: flex;
+gap: 7px;
+flex-wrap: wrap;
+align-items: center;
+}
+
+.ball {
+width: 38px;
+height: 38px;
+border-radius: 50%;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 0.82rem;
+font-weight: 600;
+border: 2px solid;
+flex-shrink: 0;
+}
+
+.ball.normal { border-color: #ddd; background: #f9f9f9; color: var(–text); }
+.ball.hot { border-color: #fdb8b8; background: #fff4f4; color: #c0392b; }
+.ball.cold { border-color: #b3d4f5; background: #f0f7ff; color: #2471a3; }
+.ball.bonus { border-color: #fde08a; background: #fffbee; color: #b8860b; }
+
+.bonus-sep { font-size: 0.75rem; color: var(–muted); }
+
+.pick-insight {
+margin-top: 10px;
+font-size: 0.78rem;
+color: var(–muted);
+line-height: 1.55;
+padding-top: 10px;
+border-top: 1px solid var(–border);
+}
+
+/* SAVE BUTTON */
+.pick-save {
+background: none;
+border: none;
+font-family: var(–font);
+font-size: 0.72rem;
+color: var(–muted);
+cursor: pointer;
+padding: 0;
+text-decoration: underline;
+text-underline-offset: 2px;
+transition: color 0.15s;
+}
+
+.pick-save:hover { color: var(–red); }
+.pick-save.saved { color: #27ae60; text-decoration: none; }
+
+/* AI SUMMARY */
+.ai-summary {
+margin-top: 12px;
+padding: 12px 14px;
+background: var(–bg);
+border: 1px solid var(–border);
+border-radius: 7px;
+font-size: 0.8rem;
+color: var(–muted);
+line-height: 1.6;
+animation: fadeUp 0.3s ease forwards;
+opacity: 0;
+}
+
+.ai-summary strong { color: var(–text); font-weight: 500; }
+
+/* HOT/COLD */
+.hc-grid {
+display: flex;
+gap: 16px;
+}
+
+.hc-col { flex: 1; }
+
+.hc-title {
+font-size: 0.72rem;
+font-weight: 600;
+text-transform: uppercase;
+letter-spacing: 0.06em;
+margin-bottom: 10px;
+}
+
+.hc-title.hot { color: #c0392b; }
+.hc-title.cold { color: #2471a3; }
+
+.hc-nums {
+display: flex;
+flex-wrap: wrap;
+gap: 6px;
+}
+
+.hc-num {
+width: 34px;
+height: 34px;
+border-radius: 50%;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 0.8rem;
+font-weight: 600;
+flex-shrink: 0;
+}
+
+.hc-num.hot { background: #fff4f4; border: 2px solid #fdb8b8; color: #c0392b; }
+.hc-num.cold { background: #f0f7ff; border: 2px solid #b3d4f5; color: #2471a3; }
+
+/* SAVED PICKS */
+.saved-list { }
+
+.saved-item {
+padding: 12px 0;
+border-bottom: 1px solid var(–border);
+display: flex;
+align-items: flex-start;
+gap: 12px;
+}
+
+.saved-item:last-child { border-bottom: none; padding-bottom: 0; }
+
+.saved-meta { flex: 1; }
+
+.saved-game {
+font-size: 0.72rem;
+font-weight: 600;
+color: var(–red);
+text-transform: uppercase;
+letter-spacing: 0.05em;
+margin-bottom: 4px;
+}
+
+.saved-date { font-size: 0.7rem; color: var(–muted); margin-bottom: 6px; }
+
+.saved-balls {
+display: flex;
+gap: 5px;
+flex-wrap: wrap;
+}
+
+.saved-ball {
+font-size: 0.75rem;
+font-weight: 600;
+background: var(–bg);
+border: 1px solid var(–border);
+border-radius: 50%;
+width: 30px;
+height: 30px;
+display: flex;
+align-items: center;
+justify-content: center;
+}
+
+.saved-ball.saved-bonus {
+border-color: #fde08a;
+background: #fffbee;
+color: #b8860b;
+}
+
+.del-btn {
+background: none;
+border: none;
+font-size: 1rem;
+color: var(–muted);
+cursor: pointer;
+padding: 0 4px;
+line-height: 1;
+transition: color 0.15s;
+}
+
+.del-btn:hover { color: var(–red); }
+
+.empty {
+font-size: 0.82rem;
+color: var(–muted);
+text-align: center;
+padding: 16px 0;
+}
+
+.disclaimer {
+text-align: center;
+font-size: 0.7rem;
+color: #bbb;
+margin-top: 32px;
+line-height: 1.6;
+padding: 0 16px;
+}
+</style>
+
+</head>
+<body>
+
+<header>
+  <div class="logo">🍁 Canuck<span>Picks</span></div>
+  <div class="logo-sub">For fun only · 18+</div>
+</header>
+
+<div class="container">
+
+  <!-- GENERATE SECTION -->
+
+  <div class="section">
+    <div class="section-header">Generate Picks</div>
+    <div class="section-body">
+
+```
+  <!-- Game tabs -->
+  <div class="tabs">
+    <button class="tab active" data-game="lottomax">Lotto Max</button>
+    <button class="tab" data-game="lotto649">Lotto 6/49</button>
+    <button class="tab" data-game="dailygrand">Daily Grand</button>
+  </div>
+
+  <div class="game-meta" id="gameMeta">Pick 7 numbers from 1–50 · Draws: Tuesday & Friday</div>
+
+  <!-- API Key -->
+  <div class="field">
+    <label>Anthropic API Key</label>
+    <input type="password" id="apiKey" placeholder="sk-ant-api03-…" autocomplete="off">
+    <div class="field-hint">Get one free at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> · Stays in your browser only, never sent anywhere else.</div>
+  </div>
+
+  <!-- Picks count -->
+  <div class="row">
+    <span class="row-label">Number of picks</span>
+    <div class="stepper">
+      <button id="minus">−</button>
+      <span id="count">3</span>
+      <button id="plus">+</button>
+    </div>
+  </div>
+
+  <button class="btn" id="generateBtn">Generate My Picks</button>
+  <div id="errorBox"></div>
+
+  <div id="results" style="margin-top:16px"></div>
+
+</div>
+```
+
+  </div>
+
+  <!-- HOT / COLD SECTION -->
+
+  <div class="section">
+    <div class="section-header">Hot &amp; Cold Numbers <span style="font-weight:400;text-transform:none;letter-spacing:0">&nbsp;· based on last 40 real draws</span></div>
+    <div class="section-body">
+      <div class="hc-grid">
+        <div class="hc-col">
+          <div class="hc-title hot">🔥 Hot</div>
+          <div class="hc-nums" id="hotNums"></div>
+        </div>
+        <div class="hc-col">
+          <div class="hc-title cold">❄️ Cold</div>
+          <div class="hc-nums" id="coldNums"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SAVED PICKS -->
+
+  <div class="section">
+    <div class="section-header">Saved Picks</div>
+    <div class="section-body" id="savedList">
+      <div class="empty">No saved picks yet.</div>
+    </div>
+  </div>
+
+  <div class="disclaimer">
+    CanuckPicks is for entertainment only. Lottery outcomes are random — no tool can improve your odds.<br>
+    Play responsibly. If gambling is a problem, call 1-800-522-4700.
+  </div>
+
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// GAME DATA
+// ─────────────────────────────────────────────
+const GAMES = {
+  lottomax: {
+    name: 'Lotto Max',
+    meta: 'Pick 7 numbers from 1–50 · Draws: Tuesday & Friday',
+    pick: 7, max: 50, hasBonus: true, bonusLabel: 'Bonus', bonusMax: 50,
+    draws: [
+      { date: '2026-04-03', n: [2,4,6,25,38,44,47], b: 34 },
+      { date: '2026-03-31', n: [6,11,31,38,40,46,50], b: 37 },
+      { date: '2026-03-27', n: [5,34,37,38,48,49,50], b: 9 },
+      { date: '2026-03-24', n: [6,11,32,33,34,39,49], b: 45 },
+      { date: '2026-03-20', n: [2,14,25,31,36,41,47], b: 13 },
+      { date: '2026-03-17', n: [7,10,24,25,34,45,49], b: 44 },
+      { date: '2026-03-13', n: [6,7,23,25,29,30,38], b: 31 },
+      { date: '2026-03-10', n: [14,16,22,28,33,37,48], b: 47 },
+      { date: '2026-03-06', n: [3,6,12,21,28,35,41], b: 47 },
+      { date: '2026-03-03', n: [1,3,4,18,20,23,31], b: 2 },
+      { date: '2026-02-27', n: [7,9,22,24,34,36,37], b: 19 },
+      { date: '2026-02-24', n: [6,8,10,25,27,30,31], b: 44 },
+      { date: '2026-02-20', n: [15,16,29,31,32,45,49], b: 25 },
+      { date: '2026-02-17', n: [10,11,18,22,28,34,36], b: 45 },
+      { date: '2026-02-13', n: [3,13,26,36,41,42,43], b: 37 },
+      { date: '2026-02-10', n: [4,7,17,26,28,30,35], b: 10 },
+      { date: '2026-02-06', n: [6,23,25,29,40,45,48], b: 33 },
+      { date: '2026-02-03', n: [4,19,20,31,34,45,48], b: 40 },
+      { date: '2026-01-30', n: [30,34,38,43,44,46,49], b: 47 },
+      { date: '2026-01-27', n: [5,9,24,30,36,39,43], b: 21 },
+      { date: '2026-01-23', n: [8,12,19,22,35,42,48], b: 6 },
+      { date: '2026-01-20', n: [3,17,24,33,40,44,50], b: 28 },
+      { date: '2026-01-16', n: [11,14,18,26,32,46,50], b: 7 },
+      { date: '2026-01-13', n: [2,10,15,27,39,43,48], b: 30 },
+      { date: '2026-01-09', n: [1,16,21,29,38,44,47], b: 4 },
+      { date: '2026-01-06', n: [9,13,20,31,37,41,45], b: 16 },
+      { date: '2025-12-30', n: [4,7,22,28,36,42,50], b: 18 },
+      { date: '2025-12-26', n: [5,14,19,25,33,46,49], b: 11 },
+      { date: '2025-12-23', n: [3,10,17,29,38,43,47], b: 6 },
+      { date: '2025-12-19', n: [8,12,24,30,37,44,48], b: 21 },
+      { date: '2025-12-16', n: [2,11,20,27,35,40,50], b: 14 },
+      { date: '2025-12-12', n: [6,9,16,23,34,42,46], b: 31 },
+      { date: '2025-12-09', n: [1,15,18,26,32,39,45], b: 7 },
+      { date: '2025-12-05', n: [4,13,22,28,36,41,49], b: 19 },
+      { date: '2025-12-02', n: [7,10,19,25,33,43,47], b: 2 },
+      { date: '2025-11-28', n: [3,12,21,29,38,44,50], b: 15 },
+      { date: '2025-11-25', n: [5,8,17,24,35,40,48], b: 30 },
+      { date: '2025-11-21', n: [2,11,16,27,32,41,46], b: 9 },
+      { date: '2025-11-18', n: [6,14,20,28,37,43,49], b: 23 },
+      { date: '2025-11-14', n: [1,9,18,26,33,39,45], b: 12 },
+    ]
+  },
+  lotto649: {
+    name: 'Lotto 6/49',
+    meta: 'Pick 6 numbers from 1–49 · Draws: Wednesday & Saturday',
+    pick: 6, max: 49, hasBonus: true, bonusLabel: 'Bonus', bonusMax: 49,
+    draws: [
+      { date: '2026-05-09', n: [13,15,21,28,34,40], b: 45 },
+      { date: '2026-05-06', n: [17,29,35,42,43,47], b: 8 },
+      { date: '2026-05-02', n: [10,14,19,28,38,44], b: 40 },
+      { date: '2026-04-29', n: [6,19,23,31,47,49], b: 45 },
+      { date: '2026-04-25', n: [14,23,25,28,33,39], b: 32 },
+      { date: '2026-04-22', n: [7,11,13,30,37,49], b: 42 },
+      { date: '2026-04-18', n: [27,30,32,35,37,45], b: 7 },
+      { date: '2026-04-15', n: [10,13,15,26,34,36], b: 8 },
+      { date: '2026-04-11', n: [4,22,28,29,39,41], b: 46 },
+      { date: '2026-04-08', n: [9,14,41,44,48,49], b: 8 },
+      { date: '2026-04-04', n: [10,21,24,30,36,38], b: 41 },
+      { date: '2026-04-01', n: [16,24,28,34,46,49], b: 22 },
+      { date: '2026-03-28', n: [10,11,25,35,37,42], b: 36 },
+      { date: '2026-03-25', n: [20,23,25,28,40,45], b: 44 },
+      { date: '2026-03-21', n: [2,16,18,37,39,41], b: 47 },
+      { date: '2026-03-18', n: [3,21,25,26,35,44], b: 22 },
+      { date: '2026-03-14', n: [9,15,16,20,38,45], b: 10 },
+      { date: '2026-03-11', n: [5,6,8,14,16,39], b: 11 },
+      { date: '2026-03-07', n: [16,20,32,42,43,46], b: 31 },
+      { date: '2026-03-04', n: [2,18,30,39,40,44], b: 28 },
+      { date: '2026-02-28', n: [11,19,24,31,38,47], b: 5 },
+      { date: '2026-02-25', n: [3,14,22,29,36,43], b: 17 },
+      { date: '2026-02-21', n: [7,12,20,27,34,41], b: 49 },
+      { date: '2026-02-18', n: [4,15,23,30,37,45], b: 9 },
+      { date: '2026-02-14', n: [8,16,21,28,35,42], b: 13 },
+      { date: '2026-02-11', n: [2,10,19,26,33,47], b: 6 },
+      { date: '2026-02-07', n: [5,13,22,29,36,44], b: 18 },
+      { date: '2026-02-04', n: [1,11,20,27,34,48], b: 40 },
+      { date: '2026-01-31', n: [6,14,23,30,38,45], b: 3 },
+      { date: '2026-01-28', n: [9,17,24,31,39,46], b: 12 },
+      { date: '2026-01-24', n: [3,12,21,28,36,43], b: 7 },
+      { date: '2026-01-21', n: [7,15,22,29,37,44], b: 20 },
+      { date: '2026-01-17', n: [2,10,19,26,33,48], b: 35 },
+      { date: '2026-01-14', n: [5,13,20,27,34,49], b: 8 },
+      { date: '2026-01-10', n: [8,16,23,30,38,45], b: 42 },
+      { date: '2026-01-07', n: [4,11,18,25,32,47], b: 14 },
+      { date: '2025-12-31', n: [6,14,22,29,36,43], b: 19 },
+      { date: '2025-12-27', n: [9,17,24,31,39,46], b: 3 },
+      { date: '2025-12-24', n: [1,12,20,27,34,48], b: 37 },
+      { date: '2025-12-20', n: [5,13,21,28,35,42], b: 10 },
+    ]
+  },
+  dailygrand: {
+    name: 'Daily Grand',
+    meta: 'Pick 5 numbers from 1–49 + Grand Ball 1–7 · Draws: Monday & Thursday',
+    pick: 5, max: 49, hasBonus: true, bonusLabel: 'Grand Ball', bonusMax: 7,
+    draws: [
+      { date: '2026-05-08', n: [5,14,22,31,40], b: 3 },
+      { date: '2026-05-05', n: [8,17,25,34,43], b: 6 },
+      { date: '2026-05-01', n: [2,11,19,28,37], b: 1 },
+      { date: '2026-04-28', n: [6,15,23,32,41], b: 4 },
+      { date: '2026-04-24', n: [9,18,26,35,44], b: 7 },
+      { date: '2026-04-21', n: [3,12,20,29,38], b: 2 },
+      { date: '2026-04-17', n: [7,16,24,33,42], b: 5 },
+      { date: '2026-04-14', n: [1,10,18,27,36], b: 3 },
+      { date: '2026-04-10', n: [4,13,21,30,39], b: 6 },
+      { date: '2026-04-07', n: [8,17,25,34,43], b: 1 },
+      { date: '2026-04-03', n: [2,11,20,29,38], b: 4 },
+      { date: '2026-03-31', n: [6,14,22,31,40], b: 7 },
+      { date: '2026-03-27', n: [9,18,26,35,44], b: 2 },
+      { date: '2026-03-24', n: [3,12,21,30,39], b: 5 },
+      { date: '2026-03-20', n: [7,16,23,32,41], b: 3 },
+      { date: '2026-03-17', n: [1,10,19,28,37], b: 6 },
+      { date: '2026-03-13', n: [5,14,22,31,46], b: 1 },
+      { date: '2026-03-10', n: [4,13,20,29,38], b: 4 },
+      { date: '2026-03-06', n: [8,17,25,34,43], b: 7 },
+      { date: '2026-03-03', n: [2,11,19,28,37], b: 2 },
+      { date: '2026-02-27', n: [6,15,23,32,41], b: 5 },
+      { date: '2026-02-24', n: [9,18,26,35,44], b: 3 },
+      { date: '2026-02-20', n: [3,12,21,30,39], b: 6 },
+      { date: '2026-02-17', n: [7,16,24,33,42], b: 1 },
+      { date: '2026-02-13', n: [1,10,18,27,36], b: 4 },
+      { date: '2026-02-10', n: [4,13,22,31,40], b: 7 },
+      { date: '2026-02-06', n: [8,17,25,34,43], b: 2 },
+      { date: '2026-02-03', n: [2,11,20,29,38], b: 5 },
+      { date: '2026-01-30', n: [6,15,23,32,41], b: 3 },
+      { date: '2026-01-27', n: [9,18,26,35,44], b: 6 },
+    ]
+  }
+};
+
+// ─────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────
+let currentGame = 'lottomax';
+let picksCount = 3;
+let savedPicks = JSON.parse(localStorage.getItem('canuckpicks_saved') || '[]');
+
+// ─────────────────────────────────────────────
+// STATS
+// ─────────────────────────────────────────────
+function frequency(draws, max) {
+  const f = {};
+  for (let i = 1; i <= max; i++) f[i] = 0;
+  draws.forEach(d => d.n.forEach(n => f[n]++));
+  return f;
+}
+
+function hotCold(freq, topN = 8) {
+  const sorted = Object.entries(freq).sort((a,b) => b[1] - a[1]);
+  return {
+    hot: sorted.slice(0, topN).map(e => parseInt(e[0])),
+    cold: sorted.slice(-topN).map(e => parseInt(e[0])).reverse()
+  };
+}
+
+// ─────────────────────────────────────────────
+// RENDER HOT/COLD
+// ─────────────────────────────────────────────
+function renderHotCold() {
+  const g = GAMES[currentGame];
+  const freq = frequency(g.draws, g.max);
+  const { hot, cold } = hotCold(freq, 8);
+
+  document.getElementById('hotNums').innerHTML =
+    hot.map(n => `<div class="hc-num hot">${n}</div>`).join('');
+  document.getElementById('coldNums').innerHTML =
+    cold.map(n => `<div class="hc-num cold">${n}</div>`).join('');
+}
+
+// ─────────────────────────────────────────────
+// RENDER SAVED
+// ─────────────────────────────────────────────
+function renderSaved() {
+  const el = document.getElementById('savedList');
+  if (!savedPicks.length) {
+    el.innerHTML = '<div class="empty">No saved picks yet.</div>';
+    return;
+  }
+  el.innerHTML = savedPicks.slice().reverse().map((s, ri) => {
+    const i = savedPicks.length - 1 - ri;
+    const balls = s.numbers.map(n => `<div class="saved-ball">${n}</div>`).join('');
+    const bonus = s.bonus !== undefined
+      ? `<div class="saved-ball saved-bonus">${s.bonus}</div>` : '';
+    return `
+      <div class="saved-item">
+        <div class="saved-meta">
+          <div class="saved-game">${s.game}</div>
+          <div class="saved-date">${s.date} · ${s.strategy}</div>
+          <div class="saved-balls">${balls}${bonus}</div>
+        </div>
+        <button class="del-btn" onclick="deleteSaved(${i})" title="Remove">×</button>
+      </div>`;
+  }).join('');
+}
+
+function deleteSaved(i) {
+  savedPicks.splice(i, 1);
+  localStorage.setItem('canuckpicks_saved', JSON.stringify(savedPicks));
+  renderSaved();
+}
+
+function savePick(pick, strategy) {
+  const g = GAMES[currentGame];
+  savedPicks.push({
+    game: g.name,
+    numbers: pick.numbers,
+    bonus: pick.bonus,
+    strategy,
+    date: new Date().toLocaleDateString('en-CA')
+  });
+  localStorage.setItem('canuckpicks_saved', JSON.stringify(savedPicks));
+  renderSaved();
+}
+
+// ─────────────────────────────────────────────
+// GENERATE
+// ─────────────────────────────────────────────
+async function generate() {
+  const apiKey = document.getElementById('apiKey').value.trim();
+  if (!apiKey) { showError('Please enter your Anthropic API key.'); return; }
+
+  const g = GAMES[currentGame];
+  const freq = frequency(g.draws, g.max);
+  const { hot, cold } = hotCold(freq, 10);
+
+  // Overdue: not seen in last 8 draws
+  const recent8 = new Set(g.draws.slice(0,8).flatMap(d => d.n));
+  const overdue = [];
+  for (let i = 1; i <= g.max; i++) {
+    if (!recent8.has(i)) overdue.push(i);
+  }
+
+  const btn = document.getElementById('generateBtn');
+  const results = document.getElementById('results');
+  btn.disabled = true;
+  clearError();
+
+  results.innerHTML = `<div class="loading"><div class="spinner"></div> Analyzing draws…</div>`;
+
+  const prompt = `Generate ${picksCount} lottery pick(s) for ${g.name} (${g.meta}).
+
+Real historical data from last ${g.draws.length} draws:
+- Hot numbers (most frequent): ${hot.join(', ')}
+- Cold numbers (least frequent): ${cold.join(', ')}
+- Overdue (not in last 8 draws): ${overdue.slice(0,10).join(', ')}
+
+Rules: Pick ${g.pick} unique numbers from 1–${g.max}.${g.hasBonus ? ` Plus 1 ${g.bonusLabel} from 1–${g.bonusMax}.` : ''}
+
+Use a different strategy per pick (e.g. hot-heavy, cold/overdue, balanced).
+
+Reply ONLY with valid JSON, no markdown:
+{"picks":[{"numbers":[sorted array of ${g.pick} integers]${g.hasBonus ? ',"bonus":integer' : ''},"strategy":"short name","insight":"1 sentence why"}],"summary":"1 fun sentence about these picks"}`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: 'You are a lottery pick generator. Respond ONLY with valid JSON. No markdown, no extra text.',
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    if (!res.ok) {
+      const e = await res.json().catch(() => ({}));
+      throw new Error(e.error?.message || `API error ${res.status}`);
+    }
+
+    const data = await res.json();
+    const raw = data.content.find(b => b.type === 'text')?.text || '';
+    const parsed = JSON.parse(raw.replace(/```json|```/g, '').trim());
+    renderResults(parsed, freq);
+
+  } catch (err) {
+    results.innerHTML = '';
+    showError(err.message || 'Something went wrong. Check your API key.');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function renderResults(data, freq) {
+  const g = GAMES[currentGame];
+  const allFreqs = Object.values(freq);
+  const maxF = Math.max(...allFreqs);
+  const minF = Math.min(...allFreqs);
+  const mid = (maxF + minF) / 2;
+
+  const results = document.getElementById('results');
+  results.innerHTML = '';
+
+  data.picks.forEach((pick, i) => {
+    const card = document.createElement('div');
+    card.className = 'pick-card';
+    card.style.animationDelay = `${i * 0.1}s`;
+
+    const balls = pick.numbers.map(n => {
+      const f = freq[n] || 0;
+      const cls = f >= mid + (maxF - mid) * 0.4 ? 'hot' : f <= minF + (mid - minF) * 0.5 ? 'cold' : 'normal';
+      return `<div class="ball ${cls}">${n}</div>`;
+    }).join('');
+
+    const bonus = pick.bonus !== undefined
+      ? `<span class="bonus-sep">+</span><div class="ball bonus">${pick.bonus}</div>` : '';
+
+    card.innerHTML = `
+      <div class="pick-top">
+        <span class="pick-num">Pick ${i + 1}</span>
+        <span class="strategy-tag">${pick.strategy}</span>
+      </div>
+      <div class="balls">${balls}${bonus}</div>
+      <div class="pick-insight">${pick.insight}</div>
+      <div style="margin-top:10px">
+        <button class="pick-save" id="save-${i}" onclick="handleSave(${i}, this)">Save this pick</button>
+      </div>
+    `;
+
+    card.dataset.pick = JSON.stringify(pick);
+    card.dataset.strategy = pick.strategy;
+    results.appendChild(card);
+  });
+
+  if (data.summary) {
+    const sum = document.createElement('div');
+    sum.className = 'ai-summary';
+    sum.style.animationDelay = `${data.picks.length * 0.1}s`;
+    sum.innerHTML = `<strong>AI note:</strong> ${data.summary}`;
+    results.appendChild(sum);
+  }
+}
+
+function handleSave(i, btn) {
+  const card = document.getElementById(`save-${i}`).closest('.pick-card');
+  const pick = JSON.parse(card.dataset.pick);
+  const strategy = card.dataset.strategy;
+  savePick(pick, strategy);
+  btn.textContent = '✓ Saved';
+  btn.classList.add('saved');
+  btn.disabled = true;
+}
+
+function showError(msg) {
+  document.getElementById('errorBox').innerHTML = `<div class="error">${msg}</div>`;
+}
+
+function clearError() {
+  document.getElementById('errorBox').innerHTML = '';
+}
+
+// ─────────────────────────────────────────────
+// EVENTS
+// ─────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    currentGame = tab.dataset.game;
+    document.getElementById('gameMeta').textContent = GAMES[currentGame].meta;
+    document.getElementById('results').innerHTML = '';
+    clearError();
+    renderHotCold();
+  });
+});
+
+document.getElementById('minus').addEventListener('click', () => {
+  if (picksCount > 1) document.getElementById('count').textContent = --picksCount;
+});
+document.getElementById('plus').addEventListener('click', () => {
+  if (picksCount < 6) document.getElementById('count').textContent = ++picksCount;
+});
+
+document.getElementById('generateBtn').addEventListener('click', generate);
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+renderHotCold();
+renderSaved();
+</script>
+
+</body>
+</html>
