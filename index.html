@@ -334,7 +334,7 @@ font-family: var(–font);
 font-size: 0.72rem;
 color: var(–muted);
 cursor: pointer;
-padding: 0;
+padding: 0; 
 text-decoration: underline;
 text-underline-offset: 2px;
 transition: color 0.15s;
@@ -507,12 +507,7 @@ padding: 0 16px;
   <div class="game-meta" id="gameMeta">Pick 7 numbers from 1–50 · Draws: Tuesday & Friday</div>
 
   <!-- API Key -->
-  <div class="field">
-    <label>Anthropic API Key</label>
-    <input type="password" id="apiKey" placeholder="sk-ant-api03-…" autocomplete="off">
-    <div class="field-hint">Get one free at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> · Stays in your browser only, never sent anywhere else.</div>
-  </div>
-
+  
   <!-- Picks count -->
   <div class="row">
     <span class="row-label">Number of picks</span>
@@ -793,8 +788,7 @@ function savePick(pick, strategy) {
 // GENERATE
 // ─────────────────────────────────────────────
 async function generate() {
-  const apiKey = document.getElementById('apiKey').value.trim();
-  if (!apiKey) { showError('Please enter your Anthropic API key.'); return; }
+ 
 
   const g = GAMES[currentGame];
   const freq = frequency(g.draws, g.max);
@@ -829,13 +823,10 @@ Reply ONLY with valid JSON, no markdown:
 {"picks":[{"numbers":[sorted array of ${g.pick} integers]${g.hasBonus ? ',"bonus":integer' : ''},"strategy":"short name","insight":"1 sentence why"}],"summary":"1 fun sentence about these picks"}`;
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch('https://holy-pine-6836.boonbabbi.workers.dev/', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
